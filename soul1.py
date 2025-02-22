@@ -3,10 +3,6 @@ import streamlit as st
 import time
 from gtts import gTTS
 import io
-import sounddevice as sd
-import numpy as np
-import vosk
-import queue
 
 # Configure Gemini API
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
@@ -32,28 +28,17 @@ def get_ai_response(user_input, chat_history, hobby_analysis):
     response = model.generate_content(conversation)
     return response.text if response and hasattr(response, "text") else "I'm here to listen."
 
-def recognize_speech():
-    """Capture voice input using sounddevice and recognize with Vosk."""
-    model = vosk.Model("model")  # Ensure you have a Vosk model downloaded
-    recognizer = vosk.KaldiRecognizer(model, 16000)
-    q = queue.Queue()
-    
-    def callback(indata, frames, time, status):
-        if status:
-            st.write(status)
-        q.put(bytes(indata))
-    
-    with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype='int16', channels=1, callback=callback):
-        st.write("Listening...")
-        data = q.get()
-        if recognizer.AcceptWaveform(data):
-            result = recognizer.Result()
-            return result["text"]
-        else:
-            return "Sorry, I couldn't understand that."
-
 def main():
     st.title("🎙️ AI Chatbot with Hobby Analysis")
+    
+    # Display instructions for enabling voice dictation based on device
+    st.subheader("🔊 Voice Input Instructions")
+    st.markdown("""
+    - **Windows**: Press `Windows + H` to activate voice dictation.
+    - **Mac**: Press `Fn` (Globe key) twice to start voice input.
+    - **Android**: Tap the microphone icon on your keyboard.
+    - **iPhone**: Enable voice dictation in keyboard settings and tap the microphone icon.
+    """)
     
     # Session state setup
     if "step" not in st.session_state:
@@ -83,19 +68,8 @@ def main():
     # Step 3: Conversational Agent
     elif st.session_state.step == 3:
         st.write("**Agent 3: Conversational Chatbot**")
-
-        # Speech-to-text toggle
-        use_voice_input = st.checkbox("Use Live Voice Input")
-
-        # Initialize user_input to avoid UnboundLocalError
-        user_input = ""
-
-        if use_voice_input:
-            if st.button("Start Listening"):
-                user_input = recognize_speech()
-                st.text_input("You:", value=user_input, key="voice_input")
-        else:
-            user_input = st.text_input("You:")
+        
+        user_input = st.text_input("You:")
 
         if user_input.strip():  # Ensure user_input is not empty
             ai_response = get_ai_response(user_input, st.session_state.chat_history, st.session_state.hobby_analysis)
