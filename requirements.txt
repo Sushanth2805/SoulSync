@@ -1,5 +1,5 @@
 pyttsx3
-pip install PyAudio‑0.2.13‑cp312‑cp312‑win_amd64.whl
+PyAudio‑0.2.13‑cp312‑cp312‑win_amd64.whl
 SpeechRecognition
 google-generativeai
 streamlit
