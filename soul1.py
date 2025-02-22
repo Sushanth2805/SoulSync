@@ -1,18 +1,22 @@
 import google.generativeai as genai
 import streamlit as st
 import time
-import pyttsx3  # Text-to-speech
 import speech_recognition as sr  # Speech-to-text
+from gtts import gTTS
+import io
 
 # Configure the Gemini API using st.secrets
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 def text_to_speech(text):
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait()
+    """Convert text to speech using gTTS."""
+    tts = gTTS(text=text, lang="en")
+    audio_data = io.BytesIO()
+    tts.write_to_fp(audio_data)
+    st.audio(audio_data, format="audio/mp3")
 
 def speech_to_text():
+    """Convert speech to text using SpeechRecognition."""
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
         st.write("Listening...")
@@ -37,7 +41,7 @@ def get_ai_response(user_input, chat_history, hobby_analysis):
     model = genai.GenerativeModel("gemini-pro")
     conversation = "\n".join(chat_history + [f"User: {user_input}", f"Hobby Insights: {hobby_analysis}"])
     response = model.generate_content(conversation)
-    return response.text if response and hasattr(response, "text") else "I'm here to listen." 
+    return response.text if response and hasattr(response, "text") else "I'm here to listen."
 
 def main():
     st.title("🤖 Multi-Agent AI Chatbot")
