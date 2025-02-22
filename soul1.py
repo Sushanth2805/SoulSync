@@ -1,11 +1,11 @@
 import google.generativeai as genai
 import streamlit as st
 import time
-import speech_recognition as sr  # Speech-to-text
 from gtts import gTTS
 import io
+import whisper
 
-# Configure the Gemini API using st.secrets
+# Configure Gemini API using st.secrets
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 def text_to_speech(text):
@@ -15,19 +15,11 @@ def text_to_speech(text):
     tts.write_to_fp(audio_data)
     st.audio(audio_data, format="audio/mp3")
 
-def speech_to_text():
-    """Convert speech to text using SpeechRecognition."""
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.write("Listening...")
-        try:
-            audio = recognizer.listen(source)
-            text = recognizer.recognize_google(audio)
-            return text
-        except sr.UnknownValueError:
-            return "Sorry, I didn't catch that."
-        except sr.RequestError:
-            return "Speech recognition service unavailable."
+def transcribe_audio(audio_file):
+    """Transcribe uploaded audio using OpenAI's Whisper model."""
+    model = whisper.load_model("base")
+    result = model.transcribe(audio_file)
+    return result["text"]
 
 def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
@@ -72,12 +64,16 @@ def main():
     elif st.session_state.step == 3:
         st.write("**Agent 3: Conversational Agent**")
         user_input = st.text_input("You:", "")
-        
-        if st.button("Speak"):
-            spoken_text = speech_to_text()
+
+        # Audio Upload Instead of Live Mic Input
+        uploaded_audio = st.file_uploader("Upload an audio file (MP3, WAV)", type=["mp3", "wav"])
+        if uploaded_audio is not None:
+            with open("temp_audio.mp3", "wb") as f:
+                f.write(uploaded_audio.read())
+            spoken_text = transcribe_audio("temp_audio.mp3")
             st.write(f"You (spoken): {spoken_text}")
             user_input = spoken_text
-        
+
         if user_input:
             ai_response = get_ai_response(user_input, st.session_state.chat_history, st.session_state.hobby_analysis)
             st.session_state.chat_history.append(f"User: {user_input}")
