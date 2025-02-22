@@ -64,7 +64,8 @@ def main():
         use_voice_input = st.checkbox("Use Live Voice Input")
 
         if use_voice_input:
-            # JavaScript-based Live Speech Recognition (Google Web Speech API)
+            st.write("Click 'Start Listening' and speak into your microphone.")
+            
             js_code = """
             <script>
             function startDictation() {
@@ -76,20 +77,29 @@ def main():
                     recognition.start();
 
                     recognition.onresult = function(e) {
-                        document.getElementById('speechText').value = e.results[0][0].transcript;
+                        var resultText = e.results[0][0].transcript;
+                        document.getElementById('speechText').value = resultText;
+                        var event = new Event('input', { bubbles: true });
+                        document.getElementById('speechText').dispatchEvent(event);
                     };
+
                     recognition.onerror = function(e) {
                         console.error("Speech recognition error:", e);
                     };
                 }
             }
             </script>
+            <input id='speechText' type='text' style='width: 100%;' value='' />
             """
+            
             st.components.v1.html(js_code, height=0)
-            speech_text = st.text_input("Speak:", key="speechText")
+
+            speech_text = st.text_input("Spoken Text:", key="speechText")
+
             if st.button("Start Listening"):
-                st.components.v1.html('<script>startDictation()</script>', height=0)
-            user_input = speech_text
+                st.components.v1.html("<script>startDictation()</script>", height=0)
+
+            user_input = speech_text if speech_text else st.text_input("You:")
         else:
             user_input = st.text_input("You:")
 
