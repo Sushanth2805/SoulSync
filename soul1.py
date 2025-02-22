@@ -1,4 +1,4 @@
-import google.generativeai as genai
+=import google.generativeai as genai
 import streamlit as st
 import time
 from gtts import gTTS
@@ -101,7 +101,7 @@ def main():
             time.sleep(1)  # Simulate natural delay
             st.write("**Chatbot:**", ai_response)
 
-            if st.checkbox("Read Response Aloud"):
+            if st.button("Read Response Aloud"):
                 text_to_speech(ai_response)
 
         for message in st.session_state.chat_history[-5:]:
