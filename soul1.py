@@ -24,7 +24,7 @@ def analyze_hobbies(hobbies):
 def get_ai_response(user_input, chat_history, hobby_analysis):
     """Generate AI response using Gemini AI with hobby analysis."""
     model = genai.GenerativeModel("gemini-pro")
-    conversation = "\n".join(chat_history + [f"User: {user_input}", f"Hobby Insights: {hobby_analysis}"])
+    conversation = "\n".join(chat_history + [f"User: {user_input}", f"User's Hobbies: {st.session_state.hobbies}", f"Hobby Insights: {hobby_analysis}"])
     response = model.generate_content(conversation)
     return response.text if response and hasattr(response, "text") else "I'm here to listen."
 
