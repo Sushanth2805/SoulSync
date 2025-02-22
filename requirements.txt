@@ -1,5 +1,5 @@
 pyttsx3
-PyAudio‑0.2.13‑cp312‑cp312‑win_amd64.whl
+pyaudio
 SpeechRecognition
 google-generativeai
 streamlit
