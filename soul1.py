@@ -3,9 +3,8 @@ import streamlit as st
 import time
 from gtts import gTTS
 import io
-import whisper
 
-# Configure Gemini API using st.secrets
+# Configure Gemini API
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 def text_to_speech(text):
@@ -15,16 +14,10 @@ def text_to_speech(text):
     tts.write_to_fp(audio_data)
     st.audio(audio_data, format="audio/mp3")
 
-def transcribe_audio(audio_file):
-    """Transcribe uploaded audio using OpenAI's Whisper model."""
-    model = whisper.load_model("base")
-    result = model.transcribe(audio_file)
-    return result["text"]
-
 def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
     model = genai.GenerativeModel("gemini-pro")
-    prompt = f"Analyze the following hobbies and give insights on how they impact personality and interests: {hobbies}"
+    prompt = f"Analyze these hobbies and explain their impact on personality: {hobbies}"
     response = model.generate_content(prompt)
     return response.text if response and hasattr(response, "text") else "Could not analyze hobbies."
 
@@ -36,54 +29,81 @@ def get_ai_response(user_input, chat_history, hobby_analysis):
     return response.text if response and hasattr(response, "text") else "I'm here to listen."
 
 def main():
-    st.title("🤖 Multi-Agent AI Chatbot")
-    st.write("A chatbot that understands your hobbies, analyzes them, and chats with you.")
+    st.title("🎙️ AI Chatbot with Hobby Analysis")
     
+    # Session state setup
     if "step" not in st.session_state:
         st.session_state.step = 1
         st.session_state.hobbies = ""
         st.session_state.hobby_analysis = ""
         st.session_state.chat_history = []
-    
+
+    # Step 1: Collect hobbies
     if st.session_state.step == 1:
         st.write("**Agent 1: Hobby Collector**")
-        hobbies = st.text_area("Tell me about your hobbies:", "")
+        hobbies = st.text_area("Tell me about your hobbies:")
         if st.button("Submit Hobbies"):
             st.session_state.hobbies = hobbies
             st.session_state.step = 2
             st.rerun()
-    
+
+    # Step 2: Analyze hobbies
     elif st.session_state.step == 2:
         st.write("**Agent 2: Hobby Analyzer**")
         st.session_state.hobby_analysis = analyze_hobbies(st.session_state.hobbies)
-        st.write("Hobby Analysis:", st.session_state.hobby_analysis)
+        st.write("**Hobby Analysis:**", st.session_state.hobby_analysis)
         if st.button("Proceed to Chat"):
             st.session_state.step = 3
             st.rerun()
-    
-    elif st.session_state.step == 3:
-        st.write("**Agent 3: Conversational Agent**")
-        user_input = st.text_input("You:", "")
 
-        # Audio Upload Instead of Live Mic Input
-        uploaded_audio = st.file_uploader("Upload an audio file (MP3, WAV)", type=["mp3", "wav"])
-        if uploaded_audio is not None:
-            with open("temp_audio.mp3", "wb") as f:
-                f.write(uploaded_audio.read())
-            spoken_text = transcribe_audio("temp_audio.mp3")
-            st.write(f"You (spoken): {spoken_text}")
-            user_input = spoken_text
+    # Step 3: Conversational Agent
+    elif st.session_state.step == 3:
+        st.write("**Agent 3: Conversational Chatbot**")
+
+        # Speech-to-text toggle
+        use_voice_input = st.checkbox("Use Live Voice Input")
+
+        if use_voice_input:
+            # JavaScript-based Live Speech Recognition (Google Web Speech API)
+            js_code = """
+            <script>
+            function startDictation() {
+                if (window.hasOwnProperty('webkitSpeechRecognition')) {
+                    var recognition = new webkitSpeechRecognition();
+                    recognition.continuous = false;
+                    recognition.interimResults = false;
+                    recognition.lang = "en-US";
+                    recognition.start();
+
+                    recognition.onresult = function(e) {
+                        document.getElementById('speechText').value = e.results[0][0].transcript;
+                    };
+                    recognition.onerror = function(e) {
+                        console.error("Speech recognition error:", e);
+                    };
+                }
+            }
+            </script>
+            """
+            st.components.v1.html(js_code, height=0)
+            speech_text = st.text_input("Speak:", key="speechText")
+            if st.button("Start Listening"):
+                st.components.v1.html('<script>startDictation()</script>', height=0)
+            user_input = speech_text
+        else:
+            user_input = st.text_input("You:")
 
         if user_input:
             ai_response = get_ai_response(user_input, st.session_state.chat_history, st.session_state.hobby_analysis)
             st.session_state.chat_history.append(f"User: {user_input}")
             st.session_state.chat_history.append(f"Chatbot: {ai_response}")
-            
-            time.sleep(1)  # Simulating natural delay
-            
+
+            time.sleep(1)  # Simulate natural delay
+            st.write("**Chatbot:**", ai_response)
+
             if st.checkbox("Read Response Aloud"):
                 text_to_speech(ai_response)
-        
+
         for message in st.session_state.chat_history[-5:]:
             st.write(message)
 
