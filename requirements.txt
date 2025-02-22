@@ -1,5 +1,6 @@
 streamlit
 google-generativeai
 gtts
-SpeechRecognition
-pydub
+sounddevice
+numpy
+speechrecognition
