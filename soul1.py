@@ -3,6 +3,7 @@ import streamlit as st
 import time
 from gtts import gTTS
 import io
+import speech_recognition as sr
 
 # Configure Gemini API
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
@@ -27,6 +28,21 @@ def get_ai_response(user_input, chat_history, hobby_analysis):
     conversation = "\n".join(chat_history + [f"User: {user_input}", f"User's Hobbies: {st.session_state.hobbies}", f"Hobby Insights: {hobby_analysis}"])
     response = model.generate_content(conversation)
     return response.text if response and hasattr(response, "text") else "I'm here to listen."
+
+def recognize_speech():
+    """Capture voice input using speech recognition."""
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.write("Listening...")
+        recognizer.adjust_for_ambient_noise(source)
+        try:
+            audio = recognizer.listen(source, timeout=5)
+            text = recognizer.recognize_google(audio)
+            return text
+        except sr.UnknownValueError:
+            return "Sorry, I couldn't understand that."
+        except sr.RequestError:
+            return "Speech recognition service is unavailable."
 
 def main():
     st.title("🎙️ AI Chatbot with Hobby Analysis")
@@ -64,42 +80,9 @@ def main():
         use_voice_input = st.checkbox("Use Live Voice Input")
 
         if use_voice_input:
-            st.write("Click 'Start Listening' and speak into your microphone.")
-            
-            js_code = """
-            <script>
-            function startDictation() {
-                if (window.hasOwnProperty('webkitSpeechRecognition')) {
-                    var recognition = new webkitSpeechRecognition();
-                    recognition.continuous = false;
-                    recognition.interimResults = false;
-                    recognition.lang = "en-US";
-                    recognition.start();
-
-                    recognition.onresult = function(e) {
-                        var resultText = e.results[0][0].transcript;
-                        document.getElementById('speechText').value = resultText;
-                        var event = new Event('input', { bubbles: true });
-                        document.getElementById('speechText').dispatchEvent(event);
-                    };
-
-                    recognition.onerror = function(e) {
-                        console.error("Speech recognition error:", e);
-                    };
-                }
-            }
-            </script>
-            <input id='speechText' type='text' style='width: 100%;' value='' />
-            """
-            
-            st.components.v1.html(js_code, height=0)
-
-            speech_text = st.text_input("Spoken Text:", key="speechText")
-
             if st.button("Start Listening"):
-                st.components.v1.html("<script>startDictation()</script>", height=0)
-
-            user_input = speech_text if speech_text else st.text_input("You:")
+                user_input = recognize_speech()
+                st.text_input("You:", value=user_input, key="voice_input")
         else:
             user_input = st.text_input("You:")
 
