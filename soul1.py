@@ -5,7 +5,8 @@ from gtts import gTTS
 import io
 import sounddevice as sd
 import numpy as np
-import speech_recognition as sr
+import vosk
+import queue
 
 # Configure Gemini API
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
@@ -32,23 +33,24 @@ def get_ai_response(user_input, chat_history, hobby_analysis):
     return response.text if response and hasattr(response, "text") else "I'm here to listen."
 
 def recognize_speech():
-    """Capture voice input using sounddevice and recognize with speech_recognition."""
-    recognizer = sr.Recognizer()
-    samplerate = 44100  # Standard sample rate
-    duration = 5  # Listen for 5 seconds
+    """Capture voice input using sounddevice and recognize with Vosk."""
+    model = vosk.Model("model")  # Ensure you have a Vosk model downloaded
+    recognizer = vosk.KaldiRecognizer(model, 16000)
+    q = queue.Queue()
     
-    st.write("Listening...")
-    recording = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=1, dtype=np.int16)
-    sd.wait()
+    def callback(indata, frames, time, status):
+        if status:
+            st.write(status)
+        q.put(bytes(indata))
     
-    try:
-        audio_data = sr.AudioData(recording.tobytes(), samplerate, 2)
-        text = recognizer.recognize_google(audio_data)
-        return text
-    except sr.UnknownValueError:
-        return "Sorry, I couldn't understand that."
-    except sr.RequestError:
-        return "Speech recognition service is unavailable."
+    with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype='int16', channels=1, callback=callback):
+        st.write("Listening...")
+        data = q.get()
+        if recognizer.AcceptWaveform(data):
+            result = recognizer.Result()
+            return result["text"]
+        else:
+            return "Sorry, I couldn't understand that."
 
 def main():
     st.title("🎙️ AI Chatbot with Hobby Analysis")
