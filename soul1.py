@@ -1,4 +1,4 @@
-=import google.generativeai as genai
+import google.generativeai as genai
 import streamlit as st
 import time
 from gtts import gTTS
