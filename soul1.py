@@ -79,6 +79,9 @@ def main():
         # Speech-to-text toggle
         use_voice_input = st.checkbox("Use Live Voice Input")
 
+        # Initialize user_input to avoid UnboundLocalError
+        user_input = ""
+
         if use_voice_input:
             if st.button("Start Listening"):
                 user_input = recognize_speech()
@@ -86,7 +89,7 @@ def main():
         else:
             user_input = st.text_input("You:")
 
-        if user_input:
+        if user_input.strip():  # Ensure user_input is not empty
             ai_response = get_ai_response(user_input, st.session_state.chat_history, st.session_state.hobby_analysis)
             st.session_state.chat_history.append(f"User: {user_input}")
             st.session_state.chat_history.append(f"Chatbot: {ai_response}")
