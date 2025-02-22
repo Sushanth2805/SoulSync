@@ -3,6 +3,8 @@ import streamlit as st
 import time
 from gtts import gTTS
 import io
+import sounddevice as sd
+import numpy as np
 import speech_recognition as sr
 
 # Configure Gemini API
@@ -30,19 +32,23 @@ def get_ai_response(user_input, chat_history, hobby_analysis):
     return response.text if response and hasattr(response, "text") else "I'm here to listen."
 
 def recognize_speech():
-    """Capture voice input using speech recognition."""
+    """Capture voice input using sounddevice and recognize with speech_recognition."""
     recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.write("Listening...")
-        recognizer.adjust_for_ambient_noise(source)
-        try:
-            audio = recognizer.listen(source, timeout=5)
-            text = recognizer.recognize_google(audio)
-            return text
-        except sr.UnknownValueError:
-            return "Sorry, I couldn't understand that."
-        except sr.RequestError:
-            return "Speech recognition service is unavailable."
+    samplerate = 44100  # Standard sample rate
+    duration = 5  # Listen for 5 seconds
+    
+    st.write("Listening...")
+    recording = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=1, dtype=np.int16)
+    sd.wait()
+    
+    try:
+        audio_data = sr.AudioData(recording.tobytes(), samplerate, 2)
+        text = recognizer.recognize_google(audio_data)
+        return text
+    except sr.UnknownValueError:
+        return "Sorry, I couldn't understand that."
+    except sr.RequestError:
+        return "Speech recognition service is unavailable."
 
 def main():
     st.title("🎙️ AI Chatbot with Hobby Analysis")
