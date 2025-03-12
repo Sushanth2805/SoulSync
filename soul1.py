@@ -3,17 +3,32 @@ import streamlit as st
 import time
 from gtts import gTTS
 import io
+import os
 
 # Configure Gemini API
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 def text_to_speech(text):
     """Convert text to speech using gTTS and play it in Streamlit."""
-    tts = gTTS(text=text, lang="en")
-    audio_fp = io.BytesIO()
-    tts.write_to_fp(audio_fp)
-    audio_fp.seek(0)  # Move pointer to the start of the audio file
-    st.audio(audio_fp, format="audio/mp3", start_time=0)
+    try:
+        tts = gTTS(text=text, lang="en")
+        audio_fp = io.BytesIO()
+        tts.write_to_fp(audio_fp)
+        audio_fp.seek(0)  # Move pointer to the start of the audio file
+
+        # Save to a temporary file (workaround for st.audio issues)
+        temp_audio_path = "temp_audio.mp3"
+        with open(temp_audio_path, "wb") as f:
+            f.write(audio_fp.read())
+
+        # Play audio in Streamlit
+        st.audio(temp_audio_path, format="audio/mp3", start_time=0)
+
+        # Optional: Remove temp file after playing
+        os.remove(temp_audio_path)
+
+    except Exception as e:
+        st.error(f"Error in text-to-speech: {e}")
 
 def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
@@ -63,8 +78,7 @@ def main():
         if st.button("Submit Hobbies"):
             st.session_state.hobbies = hobbies
             st.session_state.step = 2
-            text_to_speech(f"Your hobbies are {hobbies}")
-            st.rerun()  # ✅ FIXED
+            st.rerun()
 
     # Step 2: Analyze hobbies
     elif st.session_state.step == 2:
@@ -73,8 +87,7 @@ def main():
         st.write("*Hobby Analysis:*", st.session_state.hobby_analysis)
         if st.button("Proceed to Chat"):
             st.session_state.step = 3
-            text_to_speech(f"Hobby Analysis: {st.session_state.hobby_analysis}")
-            st.rerun()  # ✅ FIXED
+            st.rerun()
 
     # Step 3: Conversational Agent
     elif st.session_state.step == 3:
@@ -89,11 +102,15 @@ def main():
 
             time.sleep(1)
             st.write("*Chatbot:*", ai_response)
-            text_to_speech(ai_response)
 
         # Display last 5 messages (without redundant speech output)
         for message in st.session_state.chat_history[-5:]:
             st.write(message)
+
+        # Button to read last response aloud
+        if st.button("🔊 Play Last Response"):
+            if st.session_state.chat_history:
+                text_to_speech(st.session_state.chat_history[-1])
 
 if __name__ == "__main__":
     main()
