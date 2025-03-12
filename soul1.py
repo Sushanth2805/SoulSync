@@ -12,8 +12,8 @@ def text_to_speech(text):
     tts = gTTS(text=text, lang="en")
     audio_fp = io.BytesIO()
     tts.write_to_fp(audio_fp)
-    audio_fp.seek(0)  # Move pointer to the start
-    st.audio(audio_fp, format="audio/mp3")
+    audio_fp.seek(0)  # Move pointer to the start of the audio file
+    st.audio(audio_fp, format="audio/mp3", start_time=0)
 
 def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
@@ -40,7 +40,7 @@ def get_ai_response(user_input, chat_history, hobby_analysis):
 def main():
     st.title("🎙 AI Chatbot with Hobby Analysis")
 
-    # Display instructions for enabling voice dictation
+    # Display voice input instructions
     st.subheader("🔊 Voice Input Instructions")
     st.markdown("""
     - *Windows*: Press Windows + H to activate voice dictation.
@@ -63,8 +63,8 @@ def main():
         if st.button("Submit Hobbies"):
             st.session_state.hobbies = hobbies
             st.session_state.step = 2
-            st.rerun()
             text_to_speech(f"Your hobbies are {hobbies}")
+            st.experimental_rerun()
 
     # Step 2: Analyze hobbies
     elif st.session_state.step == 2:
@@ -73,8 +73,8 @@ def main():
         st.write("*Hobby Analysis:*", st.session_state.hobby_analysis)
         if st.button("Proceed to Chat"):
             st.session_state.step = 3
-            st.rerun()
             text_to_speech(f"Hobby Analysis: {st.session_state.hobby_analysis}")
+            st.experimental_rerun()
 
     # Step 3: Conversational Agent
     elif st.session_state.step == 3:
