@@ -18,19 +18,27 @@ def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
     model = genai.GenerativeModel("gemini-pro-vision")
     prompt = f"Analyze these hobbies and explain their impact on personality: {hobbies}"
-    response = model.generate_content(prompt)
-    return response.text if response and hasattr(response, "text") else "Could not analyze hobbies."
+    try:
+        response = model.generate_content(prompt)
+        return response.text if response and hasattr(response, "text") else "Could not analyze hobbies."
+    except Exception as e:
+        st.error(f"Error analyzing hobbies: {e}")
+        return "Could not analyze hobbies."
 
 def get_ai_response(user_input, chat_history, hobby_analysis):
     """Generate AI response using Gemini AI with hobby analysis."""
     model = genai.GenerativeModel("gemini-pro")
     conversation = "\n".join(chat_history + [f"User: {user_input}", f"User's Hobbies: {st.session_state.hobbies}", f"Hobby Insights: {hobby_analysis}"])
-    response = model.generate_content(conversation)
-    return response.text if response and hasattr(response, "text") else "I'm here to listen."
+    try:
+        response = model.generate_content(conversation)
+        return response.text if response and hasattr(response, "text") else "I'm here to listen."
+    except Exception as e:
+        st.error(f"Error generating response: {e}")
+        return "I'm here to listen."
 
 def main():
     st.title("🎙️ AI Chatbot with Hobby Analysis")
-    
+
     # Display instructions for enabling voice dictation based on device
     st.subheader("🔊 Voice Input Instructions")
     st.markdown("""
@@ -39,7 +47,7 @@ def main():
     - **Android**: Tap the microphone icon on your keyboard.
     - **iPhone**: Enable voice dictation in keyboard settings and tap the microphone icon.
     """)
-    
+
     # Session state setup
     if "step" not in st.session_state:
         st.session_state.step = 1
@@ -68,7 +76,7 @@ def main():
     # Step 3: Conversational Agent
     elif st.session_state.step == 3:
         st.write("**Agent 3: Conversational Chatbot**")
-        
+
         user_input = st.text_input("You:")
 
         if user_input.strip():  # Ensure user_input is not empty
