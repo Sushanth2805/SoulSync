@@ -7,7 +7,7 @@ genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 def list_models():
     """Lists available models and their supported methods."""
     try:
-        for model in genai.client.list_models():
+        for model in genai.list_models(): # corrected line
             st.write(f"**Model:** {model.name}")
             st.write(f"  **Description:** {model.description}")
             st.write(f"  **Supported methods:** {model.supported_generation_methods}")
