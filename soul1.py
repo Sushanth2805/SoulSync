@@ -3,17 +3,17 @@ import streamlit as st
 import time
 from gtts import gTTS
 import io
-import tempfile
 
 # Configure Gemini API
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 def text_to_speech(text):
-    """Convert text to speech using gTTS."""
+    """Convert text to speech using gTTS and play it in Streamlit."""
     tts = gTTS(text=text, lang="en")
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
-        tts.save(fp.name)
-        st.audio(fp.name, format="audio/mp3")
+    audio_fp = io.BytesIO()
+    tts.write_to_fp(audio_fp)
+    audio_fp.seek(0)  # Move pointer to the start
+    st.audio(audio_fp, format="audio/mp3")
 
 def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
@@ -38,18 +38,18 @@ def get_ai_response(user_input, chat_history, hobby_analysis):
         return "I'm here to listen."
 
 def main():
-    st.title("🎙️ AI Chatbot with Hobby Analysis")
+    st.title("🎙 AI Chatbot with Hobby Analysis")
 
-    # Display instructions for enabling voice dictation based on device
+    # Display instructions for enabling voice dictation
     st.subheader("🔊 Voice Input Instructions")
     st.markdown("""
-    - **Windows**: Press `Windows + H` to activate voice dictation.
-    - **Mac**: Press `Fn` (Globe key) twice to start voice input.
-    - **Android**: Tap the microphone icon on your keyboard.
-    - **iPhone**: Enable voice dictation in keyboard settings and tap the microphone icon.
+    - *Windows*: Press Windows + H to activate voice dictation.
+    - *Mac*: Press Fn (Globe key) twice to start voice input.
+    - *Android*: Tap the microphone icon on your keyboard.
+    - *iPhone*: Enable voice dictation in keyboard settings and tap the microphone icon.
     """)
 
-    # Session state setup
+    # Initialize session state variables
     if "step" not in st.session_state:
         st.session_state.step = 1
         st.session_state.hobbies = ""
@@ -58,7 +58,7 @@ def main():
 
     # Step 1: Collect hobbies
     if st.session_state.step == 1:
-        st.write("**Agent 1: Hobby Collector**")
+        st.write("*Agent 1: Hobby Collector*")
         hobbies = st.text_area("Tell me about your hobbies:")
         if st.button("Submit Hobbies"):
             st.session_state.hobbies = hobbies
@@ -68,9 +68,9 @@ def main():
 
     # Step 2: Analyze hobbies
     elif st.session_state.step == 2:
-        st.write("**Agent 2: Hobby Analyzer**")
+        st.write("*Agent 2: Hobby Analyzer*")
         st.session_state.hobby_analysis = analyze_hobbies(st.session_state.hobbies)
-        st.write("**Hobby Analysis:**", st.session_state.hobby_analysis)
+        st.write("*Hobby Analysis:*", st.session_state.hobby_analysis)
         if st.button("Proceed to Chat"):
             st.session_state.step = 3
             st.rerun()
@@ -78,7 +78,7 @@ def main():
 
     # Step 3: Conversational Agent
     elif st.session_state.step == 3:
-        st.write("**Agent 3: Conversational Chatbot**")
+        st.write("*Agent 3: Conversational Chatbot*")
 
         user_input = st.text_input("You:")
 
@@ -88,12 +88,12 @@ def main():
             st.session_state.chat_history.append(f"Chatbot: {ai_response}")
 
             time.sleep(1)
-            st.write("**Chatbot:**", ai_response)
+            st.write("*Chatbot:*", ai_response)
             text_to_speech(ai_response)
 
+        # Display last 5 messages (without redundant speech output)
         for message in st.session_state.chat_history[-5:]:
             st.write(message)
-            text_to_speech(message)
 
 if __name__ == "__main__":
     main()
