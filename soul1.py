@@ -89,11 +89,8 @@ def main():
 
             time.sleep(1)
             st.write("**Chatbot:**", ai_response)
-            text_to_speech(ai_response)
+            text_to_speech(ai_response) # This is the crucial line.
 
         for message in st.session_state.chat_history[-5:]:
             st.write(message)
             text_to_speech(message)
-
-if __name__ == "__main__":
-    main()
