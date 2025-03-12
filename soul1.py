@@ -64,7 +64,7 @@ def main():
             st.session_state.hobbies = hobbies
             st.session_state.step = 2
             text_to_speech(f"Your hobbies are {hobbies}")
-            st.experimental_rerun()
+            st.rerun()  # ✅ FIXED
 
     # Step 2: Analyze hobbies
     elif st.session_state.step == 2:
@@ -74,7 +74,7 @@ def main():
         if st.button("Proceed to Chat"):
             st.session_state.step = 3
             text_to_speech(f"Hobby Analysis: {st.session_state.hobby_analysis}")
-            st.experimental_rerun()
+            st.rerun()  # ✅ FIXED
 
     # Step 3: Conversational Agent
     elif st.session_state.step == 3:
