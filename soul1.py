@@ -16,7 +16,7 @@ def text_to_speech(text):
 
 def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
-    model = genai.GenerativeModel("gemini-pro")
+    model = genai.GenerativeModel("gemini-pro")  # Using gemini-pro
     prompt = f"Analyze these hobbies and explain their impact on personality: {hobbies}"
     try:
         response = model.generate_content(prompt)
@@ -27,7 +27,7 @@ def analyze_hobbies(hobbies):
 
 def get_ai_response(user_input, chat_history, hobby_analysis):
     """Generate AI response using Gemini AI with hobby analysis."""
-    model = genai.GenerativeModel("gemini-pro")
+    model = genai.GenerativeModel("gemini-pro") #using gemini-pro
     conversation = "\n".join(chat_history + [f"User: {user_input}", f"User's Hobbies: {st.session_state.hobbies}", f"Hobby Insights: {hobby_analysis}"])
     try:
         response = model.generate_content(conversation)
