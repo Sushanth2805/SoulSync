@@ -16,7 +16,7 @@ def text_to_speech(text):
 
 def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
-    model = genai.GenerativeModel("gemini-pro")
+    model = genai.GenerativeModel("gemini-pro-vision")
     prompt = f"Analyze these hobbies and explain their impact on personality: {hobbies}"
     response = model.generate_content(prompt)
     return response.text if response and hasattr(response, "text") else "Could not analyze hobbies."
