@@ -16,7 +16,7 @@ def text_to_speech(text):
 
 def analyze_hobbies(hobbies):
     """Use Gemini AI to analyze hobbies and generate insights."""
-    model = genai.GenerativeModel("models/gemini-2.0-flash")  # Correct model name
+    model = genai.GenerativeModel("models/gemini-2.0-flash")
     prompt = f"Analyze these hobbies and explain their impact on personality: {hobbies}"
     try:
         response = model.generate_content(prompt)
@@ -27,7 +27,7 @@ def analyze_hobbies(hobbies):
 
 def get_ai_response(user_input, chat_history, hobby_analysis):
     """Generate AI response using Gemini AI with hobby analysis."""
-    model = genai.GenerativeModel("models/gemini-2.0-flash")  # Correct model name
+    model = genai.GenerativeModel("models/gemini-2.0-flash")
     conversation = "\n".join(chat_history + [f"User: {user_input}", f"User's Hobbies: {st.session_state.hobbies}", f"Hobby Insights: {hobby_analysis}"])
     try:
         response = model.generate_content(conversation)
@@ -63,6 +63,7 @@ def main():
             st.session_state.hobbies = hobbies
             st.session_state.step = 2
             st.rerun()
+            text_to_speech(f"Your hobbies are {hobbies}") #read hobbies
 
     # Step 2: Analyze hobbies
     elif st.session_state.step == 2:
@@ -72,6 +73,7 @@ def main():
         if st.button("Proceed to Chat"):
             st.session_state.step = 3
             st.rerun()
+            text_to_speech(f"Hobby Analysis: {st.session_state.hobby_analysis}") #read hobby analysis
 
     # Step 3: Conversational Agent
     elif st.session_state.step == 3:
@@ -79,19 +81,18 @@ def main():
 
         user_input = st.text_input("You:")
 
-        if user_input.strip():  # Ensure user_input is not empty
+        if user_input.strip():
             ai_response = get_ai_response(user_input, st.session_state.chat_history, st.session_state.hobby_analysis)
             st.session_state.chat_history.append(f"User: {user_input}")
             st.session_state.chat_history.append(f"Chatbot: {ai_response}")
 
-            time.sleep(1)  # Simulate natural delay
+            time.sleep(1)
             st.write("**Chatbot:**", ai_response)
-
-            if st.button("Read Response Aloud"):
-                text_to_speech(ai_response)
+            text_to_speech(ai_response) #read chatbot response
 
         for message in st.session_state.chat_history[-5:]:
             st.write(message)
+            text_to_speech(message) # read chat history
 
 if __name__ == "__main__":
     main()
